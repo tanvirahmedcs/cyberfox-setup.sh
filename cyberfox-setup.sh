@@ -1,95 +1,53 @@
 #!/bin/bash
 
-# ============================================================
-#  Cyberfox Environment Setup (Linux Version)
-# ============================================================
+echo "============================================="
+echo "      Cyberfox Environment Setup (Linux)"
+echo "============================================="
 
 set -e
 
-# -------------------------
-# Configuration
-# -------------------------
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 FOLDER="$SCRIPT_DIR/CyberfoxPortable"
 CYBERFOX_URL="https://github.com/sahmsec/cyberfox/releases/download/v1.0/CyberfoxPortable.zip"
 CYBERFOX_ZIP="$FOLDER/CyberfoxPortable.zip"
 PASSWORD="aws"
 
-# -------------------------
-# Header
-# -------------------------
-echo "============================================="
-echo "       Cyberfox Environment Setup (Linux)"
-echo "============================================="
-echo ""
+# Create workspace
+mkdir -p "$FOLDER"
+echo "[SUCCESS] Workspace: $FOLDER"
 
-# -------------------------
-# Workspace
-# -------------------------
-if [ ! -d "$FOLDER" ]; then
-    mkdir -p "$FOLDER"
-    echo "[SUCCESS] Workspace created: $FOLDER"
-else
-    echo "[INFO] Workspace already exists: $FOLDER"
+# Install unrar if missing
+if ! command -v unrar >/dev/null 2>&1; then
+    echo "[STEP] Installing unrar..."
+    sudo apt update && sudo apt install -y unrar
 fi
 
-# -------------------------
-# Check unzip
-# -------------------------
-if ! command -v unzip >/dev/null 2>&1; then
-    echo "[STEP] Installing unzip..."
-    sudo apt update && sudo apt install -y unzip
-fi
-
-# -------------------------
-# Download Cyberfox ZIP
-# -------------------------
-echo "[STEP] Downloading Cyberfox package..."
+# Download Cyberfox
+echo "[STEP] Downloading Cyberfox..."
 wget -q --show-progress -O "$CYBERFOX_ZIP" "$CYBERFOX_URL"
 
-if [ -f "$CYBERFOX_ZIP" ]; then
-    echo "[SUCCESS] Cyberfox ZIP downloaded"
-else
-    echo "[ERROR] Failed to download Cyberfox"
-    exit 1
-fi
+echo "[SUCCESS] Download completed"
 
-# -------------------------
-# Extract ZIP
-# -------------------------
-echo "[STEP] Extracting Cyberfox..."
-
-# unzip supports password: -P password
-if unzip -P "$PASSWORD" "$CYBERFOX_ZIP" -d "$FOLDER" >/dev/null 2>&1; then
+# Extract using UNRAR
+echo "[STEP] Extracting Cyberfox (RAR)..."
+if unrar x -p"$PASSWORD" "$CYBERFOX_ZIP" "$FOLDER/" >/dev/null 2>&1; then
     echo "[SUCCESS] Extraction complete"
 else
     echo "[ERROR] Extraction failed"
     exit 1
 fi
 
-# -------------------------
-# Cleanup ZIP
-# -------------------------
+# Cleanup
 rm -f "$CYBERFOX_ZIP"
-echo "[INFO] Deleted downloaded ZIP"
+echo "[INFO] Deleted ZIP"
 
-# -------------------------
-# Open folder for user
-# -------------------------
-if command -v xdg-open >/dev/null 2>&1; then
-    xdg-open "$FOLDER"
-elif command -v open >/dev/null 2>&1; then
-    open "$FOLDER"   # for macOS
-fi
+# Open folder
+xdg-open "$FOLDER" >/dev/null 2>&1 &
 
-echo "[DONE] Cyberfox is ready."
-
-# -------------------------
-# Auto-delete script itself
-# -------------------------
+# Auto-delete script
 (
-    sleep 5
+    sleep 3
     rm -f "$0"
 ) &
 
-exit 0
+echo "[DONE] Cyberfox is ready!"
