@@ -1,1 +1,0 @@
-# cyberfox-setup.sh
